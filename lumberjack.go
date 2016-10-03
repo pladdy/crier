@@ -25,28 +25,52 @@ func StartLogging() {
 	Info("Loggers started")
 }
 
-func Info(logStatement string) {
-	info.Println(logStatement)
-}
-
-func Warn(logStatement string) {
-	warn.Println(logStatement)
-}
-
-func Error(logStatement string) {
-	error.Println(logStatement)
-}
-
-func Debug(logStatement string) {
-	if os.ExpandEnv("${DEBUG}") != "" {
-		debug.Println(logStatement)
+func Info(logStatement string, a ...interface{}) {
+	if a != nil {
+		info.Printf(logStatement+"\n", a)
+	} else {
+		info.Println(logStatement)
 	}
 }
 
-func Panic(logStatement string) {
-	error.Panicln(logStatement)
+func Warn(logStatement string, a ...interface{}) {
+	if a != nil {
+		warn.Printf(logStatement+"\n", a)
+	} else {
+		warn.Println(logStatement)
+	}
 }
 
-func Fatal(logStatement string) {
-	error.Fatalln(logStatement)
+func Error(logStatement string, a ...interface{}) {
+	if a != nil {
+		error.Printf(logStatement+"\n", a)
+	} else {
+		error.Println(logStatement)
+	}
+}
+
+func Debug(logStatement string, a ...interface{}) {
+	if os.ExpandEnv("${DEBUG}") != "" {
+		if a != nil {
+			debug.Printf(logStatement+"\n", a)
+		} else {
+			debug.Println(logStatement)
+		}
+	}
+}
+
+func Panic(logStatement string, a ...interface{}) {
+	if a != nil {
+		error.Panicf(logStatement+"\n", a)
+	} else {
+		error.Panicln(logStatement)
+	}
+}
+
+func Fatal(logStatement string, a ...interface{}) {
+	if a != nil {
+		error.Fatalf(logStatement+"\n", a)
+	} else {
+		error.Fatalln(logStatement)
+	}
 }
