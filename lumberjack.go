@@ -8,21 +8,25 @@ import (
 )
 
 var (
-	info  *log.Logger
-	warn  *log.Logger
-	error *log.Logger
-	debug *log.Logger
+	info           *log.Logger
+	warn           *log.Logger
+	error          *log.Logger
+	debug          *log.Logger
+	loggersStarted bool
 )
 
-// Start up the logging handlers; takes option names of new handlers
+// Start up the logging handlers; only initializes once
 // Default Handlers:
 //    Info, Warn, Error, Debug
 func StartLogging() {
-	info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Llongfile)
-	warn = log.New(os.Stdout, "WARN: ", log.Ldate|log.Ltime|log.Llongfile)
-	error = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Llongfile)
-	debug = log.New(os.Stdout, "DEBUG: ", log.Ldate|log.Ltime|log.Llongfile)
-	Info("Loggers started")
+	if loggersStarted != true {
+		info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Llongfile)
+		warn = log.New(os.Stdout, "WARN: ", log.Ldate|log.Ltime|log.Llongfile)
+		error = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Llongfile)
+		debug = log.New(os.Stdout, "DEBUG: ", log.Ldate|log.Ltime|log.Llongfile)
+		loggersStarted = true
+		Info("Loggers started")
+	}
 }
 
 func Info(logStatement string, a ...interface{}) {
