@@ -11,6 +11,7 @@ func TestLumberjack(t *testing.T) {
 	t.Run("TestInfo", func(t *testing.T) {
 		Info("this is info")
 		Info("this is a %%v placeholder: %v", 42)
+		Info("this is a number: %v and this is a string: %s", 42, "banana")
 	})
 
 	t.Run("TestWarn", func(t *testing.T) {

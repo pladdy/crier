@@ -31,7 +31,7 @@ func StartLogging() {
 
 func Info(logStatement string, a ...interface{}) {
 	if a != nil {
-		info.Printf(logStatement+"\n", a)
+		info.Printf(logStatement+"\n", a...)
 	} else {
 		info.Println(logStatement)
 	}
@@ -39,7 +39,7 @@ func Info(logStatement string, a ...interface{}) {
 
 func Warn(logStatement string, a ...interface{}) {
 	if a != nil {
-		warn.Printf(logStatement+"\n", a)
+		warn.Printf(logStatement+"\n", a...)
 	} else {
 		warn.Println(logStatement)
 	}
@@ -47,7 +47,7 @@ func Warn(logStatement string, a ...interface{}) {
 
 func Error(logStatement string, a ...interface{}) {
 	if a != nil {
-		error.Printf(logStatement+"\n", a)
+		error.Printf(logStatement+"\n", a...)
 	} else {
 		error.Println(logStatement)
 	}
@@ -56,7 +56,7 @@ func Error(logStatement string, a ...interface{}) {
 func Debug(logStatement string, a ...interface{}) {
 	if os.ExpandEnv("${DEBUG}") != "" {
 		if a != nil {
-			debug.Printf(logStatement+"\n", a)
+			debug.Printf(logStatement+"\n", a...)
 		} else {
 			debug.Println(logStatement)
 		}
@@ -65,7 +65,7 @@ func Debug(logStatement string, a ...interface{}) {
 
 func Panic(logStatement string, a ...interface{}) {
 	if a != nil {
-		error.Panicf(logStatement+"\n", a)
+		error.Panicf(logStatement+"\n", a...)
 	} else {
 		error.Panicln(logStatement)
 	}
@@ -73,7 +73,7 @@ func Panic(logStatement string, a ...interface{}) {
 
 func Fatal(logStatement string, a ...interface{}) {
 	if a != nil {
-		error.Fatalf(logStatement+"\n", a)
+		error.Fatalf(logStatement+"\n", a...)
 	} else {
 		error.Fatalln(logStatement)
 	}
