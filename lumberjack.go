@@ -29,6 +29,20 @@ func StartLogging() {
 	}
 }
 
+// Quiet the logging, point them all to /dev/null
+func Hush() {
+	devNull, err := os.Create(os.DevNull)
+	if err != nil {
+		panic("Failed to hush lumberjack!")
+	}
+
+	info = log.New(devNull, "", log.Ldate)
+	warn = log.New(devNull, "", log.Ldate)
+	error = log.New(devNull, "", log.Ldate)
+	debug = log.New(devNull, "", log.Ldate)
+	loggersStarted = false
+}
+
 func Info(logStatement string, a ...interface{}) {
 	if a != nil {
 		info.Printf(logStatement+"\n", a...)

@@ -5,6 +5,11 @@ import (
 	"testing"
 )
 
+func TestHush(t *testing.T) {
+	Hush()
+	Info("Nada")
+}
+
 func TestLumberjack(t *testing.T) {
 	StartLogging()
 
