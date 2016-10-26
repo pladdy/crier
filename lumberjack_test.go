@@ -8,6 +8,8 @@ import (
 func TestHush(t *testing.T) {
 	Hush()
 	Info("Nada")
+	StartLogging()
+	Info("Lala")
 }
 
 func TestLumberjack(t *testing.T) {

@@ -3,6 +3,7 @@
 package lumberjack
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -13,18 +14,25 @@ var (
 	error          *log.Logger
 	debug          *log.Logger
 	loggersStarted bool
+	hushed         bool
 )
+
+// log package uses a callDepth of 2; if we don't bump to 3 when this
+// package gets used the file shown will always be this one
+const callDepth = 2
 
 // Start up the logging handlers; only initializes once
 // Default Handlers:
 //    Info, Warn, Error, Debug
 func StartLogging() {
-	if loggersStarted != true {
+	// loggers aren't already started, or the logging is hushed, start
+	if loggersStarted != true || hushed != false {
 		info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Llongfile)
 		warn = log.New(os.Stdout, "WARN: ", log.Ldate|log.Ltime|log.Llongfile)
 		error = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Llongfile)
 		debug = log.New(os.Stdout, "DEBUG: ", log.Ldate|log.Ltime|log.Llongfile)
 		loggersStarted = true
+		hushed = false
 		Info("Loggers started")
 	}
 }
@@ -40,55 +48,60 @@ func Hush() {
 	warn = log.New(devNull, "", log.Ldate)
 	error = log.New(devNull, "", log.Ldate)
 	debug = log.New(devNull, "", log.Ldate)
-	loggersStarted = false
+	loggersStarted = true
+	hushed = true
 }
 
 func Info(logStatement string, a ...interface{}) {
 	if a != nil {
-		info.Printf(logStatement+"\n", a...)
+		info.Output(callDepth, fmt.Sprintf(logStatement, a...))
 	} else {
-		info.Println(logStatement)
+		info.Output(callDepth, logStatement)
 	}
 }
 
 func Warn(logStatement string, a ...interface{}) {
 	if a != nil {
-		warn.Printf(logStatement+"\n", a...)
+		warn.Output(callDepth, fmt.Sprintf(logStatement, a...))
 	} else {
-		warn.Println(logStatement)
+		warn.Output(callDepth, logStatement)
 	}
 }
 
 func Error(logStatement string, a ...interface{}) {
 	if a != nil {
-		error.Printf(logStatement+"\n", a...)
+		error.Output(callDepth, fmt.Sprintf(logStatement, a...))
 	} else {
-		error.Println(logStatement)
+		error.Output(callDepth, logStatement)
 	}
 }
 
 func Debug(logStatement string, a ...interface{}) {
 	if os.ExpandEnv("${DEBUG}") != "" {
 		if a != nil {
-			debug.Printf(logStatement+"\n", a...)
+			debug.Output(callDepth, fmt.Sprintf(logStatement, a...))
 		} else {
-			debug.Println(logStatement)
+			debug.Output(callDepth, logStatement)
 		}
 	}
 }
 
 func Panic(logStatement string, a ...interface{}) {
 	if a != nil {
-		error.Panicf(logStatement+"\n", a...)
+		error.Output(callDepth, fmt.Sprintf(logStatement, a...))
+		panic(logStatement)
 	} else {
-		error.Panicln(logStatement)
+		error.Output(callDepth, logStatement)
+		panic(logStatement)
 	}
 }
 
 func Fatal(logStatement string, a ...interface{}) {
 	if a != nil {
-		error.Fatalf(logStatement+"\n", a...)
+		error.Output(callDepth, fmt.Sprintf(logStatement, a...))
+		os.Exit(1)
 	} else {
-		error.Fatalln(logStatement)
+		error.Output(callDepth, logStatement)
+		os.Exit(1)
 	}
 }
