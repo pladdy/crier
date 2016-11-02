@@ -1,25 +1,95 @@
 package lumberjack
 
 import (
+	"bytes"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 )
 
+// Helpers
+
+// Given a string remove trailing newline
+func chomp(s string) string {
+	return strings.TrimRight(s, "\n")
+}
+
+// Restart logging and return a test buffer
+func restartLogging() *bytes.Buffer {
+	var testBuffer bytes.Buffer
+	StartLogging(&testBuffer)
+	return &testBuffer
+}
+
+// Given a log string, remove the prefix and newline
+func trimLog(level string, s string) string {
+	// remove log prefix from buffer
+	logPrefix := regexp.MustCompile(level + ":.+?:\\d+: ")
+	return chomp(logPrefix.ReplaceAllString(s, ""))
+}
+
+// Tests
+
 func TestHush(t *testing.T) {
+	// test one call to Hush
+	testBuffer := restartLogging()
 	Hush()
-	Info("Nada")
-	StartLogging()
-	Info("Lala")
+	expected := ""
+	Info("I'm hushed, I can't sing!")
+
+	result := trimLog("INFO", testBuffer.String())
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+
+	// Test logging, then doing a Hush, then logging again
+	testBuffer = restartLogging()
+	expected = "Not hushed..."
+	Info("Not hushed...")
+
+	result = trimLog("INFO", testBuffer.String())
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+
+	// Hush again, nothing will get logged
+	Hush()
+	Info("I got hushed again!")
+
+	// Start logging again, should append
+	StartLogging(testBuffer)
+	expected += "\nor am I?"
+	Info("or am I?")
+
+	result = trimLog("INFO", testBuffer.String())
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+}
+
+func TestInfo(t *testing.T) {
+	testBuffer := restartLogging()
+	expected := "this is info"
+	Info(expected)
+	result := trimLog("INFO", testBuffer.String())
+
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+
+	testBuffer = restartLogging()
+	expected = "the answer is 42"
+	Info("the answer is %v", 42)
+	result = trimLog("INFO", testBuffer.String())
+
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
 }
 
 func TestLumberjack(t *testing.T) {
 	StartLogging()
-
-	t.Run("TestInfo", func(t *testing.T) {
-		Info("this is info")
-		Info("this is a %%v placeholder: %v", 42)
-		Info("this is a number: %v and this is a string: %s", 42, "banana")
-	})
 
 	t.Run("TestWarn", func(t *testing.T) {
 		Warn("this is warn")
