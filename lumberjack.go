@@ -16,8 +16,8 @@ var (
 	debug *log.Logger
 )
 
-// log package uses a callDepth of 2; if we don't bump to 3 when this
-// package gets used the file shown will always be this one
+// log package uses a callDepth of 2; seems to be what you need to log from
+// where log message is calling from
 const callDepth = 2
 
 func Debug(logStatement string, a ...interface{}) {
