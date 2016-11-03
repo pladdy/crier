@@ -2,6 +2,7 @@ package lumberjack
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -16,7 +17,7 @@ func chomp(s string) string {
 }
 
 // Restart logging and return a test buffer
-func restartLogging() *bytes.Buffer {
+func newLoggingBuffer() *bytes.Buffer {
 	var testBuffer bytes.Buffer
 	StartLogging(&testBuffer)
 	return &testBuffer
@@ -31,9 +32,9 @@ func trimLog(level string, s string) string {
 
 // Tests
 
-func TestHush(t *testing.T) {
+func TestHushOnce(t *testing.T) {
 	// test one call to Hush
-	testBuffer := restartLogging()
+	testBuffer := newLoggingBuffer()
 	Hush()
 	expected := ""
 	Info("I'm hushed, I can't sing!")
@@ -42,25 +43,28 @@ func TestHush(t *testing.T) {
 	if result != expected {
 		t.Error("Got:", result, "Expected:", expected)
 	}
+}
 
+// make sure logging starts again after a hush
+func TestHushThenLog(t *testing.T) {
 	// Test logging, then doing a Hush, then logging again
-	testBuffer = restartLogging()
-	expected = "Not hushed..."
+	testBuffer := newLoggingBuffer()
+	expected := "Not hushed..."
 	Info("Not hushed...")
 
-	result = trimLog("INFO", testBuffer.String())
+	result := trimLog("INFO", testBuffer.String())
 	if result != expected {
 		t.Error("Got:", result, "Expected:", expected)
 	}
 
-	// Hush again, nothing will get logged
+	// Hush, nothing will get logged
 	Hush()
-	Info("I got hushed again!")
+	Info("I got hushed!")
 
 	// Start logging again, should append
 	StartLogging(testBuffer)
-	expected += "\nor am I?"
-	Info("or am I?")
+	expected += "\nNot hushed anymore?"
+	Info("Not hushed anymore?")
 
 	result = trimLog("INFO", testBuffer.String())
 	if result != expected {
@@ -68,8 +72,52 @@ func TestHush(t *testing.T) {
 	}
 }
 
+func TestDebug(t *testing.T) {
+	os.Setenv("DEBUG", "1")
+
+	testBuffer := newLoggingBuffer()
+	expected := "this is Debug"
+	Debug(expected)
+	result := trimLog("DEBUG", testBuffer.String())
+
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+
+	testBuffer = newLoggingBuffer()
+	expected = "the answer is 42"
+	Debug("the answer is %v", 42)
+	result = trimLog("DEBUG", testBuffer.String())
+
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+
+	os.Unsetenv("DEBUG")
+}
+
+func TestError(t *testing.T) {
+	testBuffer := newLoggingBuffer()
+	expected := "this is Error"
+	Error(expected)
+	result := trimLog("ERROR", testBuffer.String())
+
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+
+	testBuffer = newLoggingBuffer()
+	expected = "the answer is 42"
+	Error("the answer is %v", 42)
+	result = trimLog("ERROR", testBuffer.String())
+
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+}
+
 func TestInfo(t *testing.T) {
-	testBuffer := restartLogging()
+	testBuffer := newLoggingBuffer()
 	expected := "this is info"
 	Info(expected)
 	result := trimLog("INFO", testBuffer.String())
@@ -78,7 +126,7 @@ func TestInfo(t *testing.T) {
 		t.Error("Got:", result, "Expected:", expected)
 	}
 
-	testBuffer = restartLogging()
+	testBuffer = newLoggingBuffer()
 	expected = "the answer is 42"
 	Info("the answer is %v", 42)
 	result = trimLog("INFO", testBuffer.String())
@@ -88,48 +136,56 @@ func TestInfo(t *testing.T) {
 	}
 }
 
-func TestLumberjack(t *testing.T) {
-	StartLogging()
+func TestWarn(t *testing.T) {
+	testBuffer := newLoggingBuffer()
+	expected := "this is Warn"
+	Warn(expected)
+	result := trimLog("WARN", testBuffer.String())
 
-	t.Run("TestWarn", func(t *testing.T) {
-		Warn("this is warn")
-		Warn("this is a %%v placeholder: %v", 42)
-	})
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
 
-	t.Run("TestError", func(t *testing.T) {
-		Error("this is error")
-		Error("this is a %%v placeholder: %v", 42)
-	})
+	testBuffer = newLoggingBuffer()
+	expected = "the answer is 42"
+	Warn("the answer is %v", 42)
+	result = trimLog("WARN", testBuffer.String())
 
-	t.Run("TestDebug", func(t *testing.T) {
-		if os.ExpandEnv("${DEBUG}") != "" {
-			os.Unsetenv("${DEBUG}")
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
+}
+
+func TestPanic(t *testing.T) {
+	testBuffer := newLoggingBuffer()
+	expected := "this is Panic"
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected recover to catch a panic")
 		}
+	}()
+	Panic(expected)
 
-		Debug("this is debug") // won't print
+	result := trimLog("ERROR", testBuffer.String())
 
-		os.Setenv("DEBUG", "1")
-		Debug("this is debug") // will print
-		Debug("this is a %%v placeholder: %v", 42)
-	})
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
 
-	t.Run("TestPanic", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				Warn("Panic recovered!")
-			}
-		}()
+	// test with an interface
+	testBuffer = newLoggingBuffer()
+	expected = "the answer is 42"
 
-		Panic("this is panic!")
-	})
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovering: %v", r)
+		}
+	}()
+	Panic("the answer is %v", 42)
+	result = trimLog("ERROR", testBuffer.String())
 
-	t.Run("TestPanicWithVerb", func(t *testing.T) {
-		defer func() {
-			if r := recover(); r != nil {
-				Warn("this is a %%v placeholder: %v", 42)
-			}
-		}()
-
-		Panic("this is panic! %%v placeholder: %v", 42)
-	})
+	if result != expected {
+		t.Error("Got:", result, "Expected:", expected)
+	}
 }

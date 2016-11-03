@@ -11,9 +11,9 @@ import (
 
 var (
 	info  *log.Logger
-	warn  *log.Logger
-	error *log.Logger
 	debug *log.Logger
+	error *log.Logger
+	warn  *log.Logger
 )
 
 // log package uses a callDepth of 2; seems to be what you need to log from
