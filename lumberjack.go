@@ -76,9 +76,7 @@ func Panic(logStatement string, a ...interface{}) {
 	}
 }
 
-// Start up the logging handlers; only initializes once
-// Default Handlers:
-//    Info, Warn, Error, Debug
+// Start up the log.Loggers
 func StartLogging(out ...io.Writer) {
 	if len(out) == 0 {
 		info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Llongfile)
