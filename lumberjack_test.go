@@ -179,7 +179,7 @@ func TestPanic(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Recovering: %v", r)
+			fmt.Printf("Recovering: %v\n", r)
 		}
 	}()
 	Panic("the answer is %v", 42)
