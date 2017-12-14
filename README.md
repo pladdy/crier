@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/pladdy/lumberjack)](https://goreportcard.com/report/github.com/pladdy/lumberjack)
+
 ## lumberjack
 A Go package for wrapping the "log" package with some helper functions.
 Basically it's an opinionated logger (see what I did there?); lumberjacks make
